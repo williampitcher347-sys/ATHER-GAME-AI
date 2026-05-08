@@ -1,0 +1,32 @@
+name: Genie Auto-Research
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # This tells GitHub to run every 60 minutes
+  workflow_dispatch:      # This adds a "Play" button so you can run it manually
+
+jobs:
+  run-ai:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Copy My Files
+        uses: actions/checkout@v4
+
+      - name: Wake up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python "Keys"
+        run: pip install aiohttp beautifulsoup4
+
+      - name: Execute Search
+        run: python agent.py
+
+      - name: Save Knowledge to GitHub
+        run: |
+          git config --global user.name "Genie-Bot"
+          git config --global user.email "genie@github.com"
+          git add ai_brain.json
+          git commit -m "New game data discovered" || exit 0
+          git push
