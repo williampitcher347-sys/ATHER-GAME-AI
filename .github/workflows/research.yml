@@ -29,4 +29,4 @@ jobs:
           git config --global user.email "genie@github.com"
           git add ai_brain.json
           git commit -m "New game data discovered" || exit 0
-          git push
+          git push --force
