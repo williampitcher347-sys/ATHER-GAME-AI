@@ -1,0 +1,59 @@
+import asyncio
+import aiohttp
+from bs4 import BeautifulSoup
+import json
+import time
+
+# --- CONFIGURATION ---
+TARGET_TOPIC = "physics engine coding"
+START_URLS = [
+    f"https://www.google.com/search?q={TARGET_TOPIC}+tutorial",
+    "https://gamedev.stackexchange.com/",
+    "https://github.com/trending/c++"
+]
+
+knowledge_base = []
+
+async def fetch_page(session, url):
+    """Scrapes a single page and extracts 'Knowledge'"""
+    try:
+        async with session.get(url, timeout=10) as response:
+            if response.status == 200:
+                html = await response.text()
+                soup = BeautifulSoup(html, 'html.parser')
+                
+                # Extract text but filter out 'noise' (navbars, footers)
+                for script in soup(["script", "style"]): script.decompose()
+                text = soup.get_text(separator=' ', strip=True)
+                
+                print(f"[SUCCESS] Internalized: {url[:50]}...")
+                return {"url": url, "content": text[:2000]} # Limit size for efficiency
+    except Exception as e:
+        return None
+
+async def main():
+    print(f"--- GENIE CRAWLER STARTING (Topic: {TARGET_TOPIC}) ---")
+    start_time = time.time()
+
+    async with aiohttp.ClientSession(headers={'User-Agent': 'Mozilla/5.0'}) as session:
+        # Step 1: Create a list of 100+ tasks (you can add more URLs here)
+        tasks = []
+        for i in range(100):
+            # In a real version, we would find new links on every page (Spidering)
+            tasks.append(fetch_page(session, START_URLS[0]))
+
+        # Step 2: Run all 100 tasks simultaneously
+        results = await asyncio.gather(*tasks)
+        
+        # Step 3: Save to the 'AI Brain' file
+        valid_results = [r for r in results if r]
+        with open('ai_brain.json', 'w') as f:
+            json.dump(valid_results, f, indent=4)
+
+    end_time = time.time()
+    print(f"--- MISSION COMPLETE ---")
+    print(f"Total Pages Scraped: {len(valid_results)}")
+    print(f"Time Taken: {round(end_time - start_time, 2)} seconds")
+
+if __name__ == "__main__":
+    asyncio.run(main())
