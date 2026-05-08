@@ -2,59 +2,99 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Genie Game Forge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genie Game AI | Command Center</title>
     <style>
-        body { font-family: 'Courier New', monospace; background: #020617; color: #f8fafc; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; }
-        #game-canvas { background: #000; border: 3px solid #38bdf8; width: 100%; height: 400px; border-radius: 8px; margin-top: 20px; }
-        .prompt-box { background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #334155; }
-        input { width: 80%; padding: 12px; border-radius: 6px; border: none; background: #0f172a; color: #38bdf8; font-weight: bold; }
-        button { padding: 12px 24px; border-radius: 6px; border: none; background: #38bdf8; color: #0f172a; cursor: pointer; font-weight: bold; }
-        .research-log { margin-top: 30px; font-size: 0.8rem; color: #64748b; border-top: 1px solid #334155; padding-top: 20px; }
+        :root { --neon: #00f2ff; --bg: #020617; --card: #1e293b; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: white; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Left Side: Game Forge */
+        .forge-panel { width: 40%; border-right: 1px solid #334155; padding: 30px; display: flex; flex-direction: column; background: #070e1d; }
+        
+        /* Right Side: Research Stream */
+        .stream-panel { width: 60%; padding: 30px; overflow-y: auto; background: var(--bg); }
+
+        h1 { color: var(--neon); font-size: 1.5rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        .status-bar { font-size: 0.7rem; color: #10b981; margin-bottom: 30px; display: flex; align-items: center; gap: 8px; }
+        .dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; }
+
+        /* Command Input */
+        .command-box { background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        input { width: 100%; background: none; border: none; color: var(--neon); font-family: monospace; outline: none; font-size: 1rem; }
+        button { background: var(--neon); color: black; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; transition: 0.3s; }
+        button:hover { opacity: 0.8; transform: translateY(-2px); }
+
+        /* Game Canvas Area */
+        #game-preview { width: 100%; height: 250px; background: black; border-radius: 8px; margin-top: auto; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 0.8rem; }
+
+        /* Research Cards */
+        .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; transition: 0.3s; position: relative; overflow: hidden; }
+        .card:hover { border-color: var(--neon); box-shadow: 0 0 20px rgba(0, 242, 255, 0.1); }
+        .card-url { font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px; font-family: monospace; }
+        .card-text { font-size: 0.9rem; line-height: 1.5; color: #cbd5e1; }
+        .tag { position: absolute; top: 10px; right: 10px; background: #334155; padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; color: var(--neon); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🧞 Genie Game Forge</h1>
+
+    <div class="forge-panel">
+        <h1>Genie Forge</h1>
+        <div class="status-bar"><div class="dot"></div> Agent Online | Ready to Code</div>
         
-        <div class="prompt-box">
-            <p>What game should we build using the current research?</p>
-            <input type="text" id="user-prompt" placeholder="e.g. A red square that jumps over blue obstacles">
-            <button onclick="forgeGame()">FORGE GAME</button>
+        <div class="command-box">
+            <p style="margin-top:0; font-size: 0.8rem; color: #94a3b8;">INPUT PROMPT:</p>
+            <input type="text" id="prompt" placeholder="Build a game with physics...">
+            <button onclick="forgeGame()">FORGE ASSET</button>
         </div>
 
-        <canvas id="game-canvas"></canvas>
-
-        <div class="research-log">
-            <h3>Current Brain Data:</h3>
-            <div id="brain-data">Syncing knowledge...</div>
+        <div id="game-preview">
+            [PREVIEW CANVAS READY]
         </div>
     </div>
 
+    <div class="stream-panel">
+        <h2 style="font-size: 1rem; color: #94a3b8; text-transform: uppercase;">Live Intelligence Stream</h2>
+        <div id="stream-content">Loading brain...</div>
+    </div>
+
     <script>
-        // This function will eventually talk to a real AI API
-        // For now, it "forges" a game based on your research!
-        function forgeGame() {
-            const prompt = document.getElementById('user-prompt').value;
-            const canvas = document.getElementById('game-canvas');
-            const ctx = canvas.getContext('2d');
-            
-            alert("Genie is analyzing research to build: " + prompt);
-            
-            // Basic Game Engine Start
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#38bdf8";
-            ctx.fillRect(50, 50, 50, 50); // The AI "starts" the project
-            ctx.fillStyle = "white";
-            ctx.fillText("AI Game Engine Initialized...", 10, 20);
+        async function syncBrain() {
+            try {
+                const res = await fetch('ai_brain.json?v=' + Date.now());
+                const data = await res.json();
+                const container = document.getElementById('stream-content');
+                container.innerHTML = '';
+
+                data.forEach(item => {
+                    // This "tidies" the messy text data
+                    let cleanText = item.data.split('Skip to')[0].substring(0, 400).replace(/\\n/g, ' ');
+                    
+                    container.innerHTML += `
+                        <div class="card">
+                            <div class="tag">RESEARCH</div>
+                            <div class="card-url">${item.url}</div>
+                            <div class="card-text">${cleanText}...</div>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.log("Waiting for data...");
+            }
         }
 
-        async function loadResearch() {
-            const res = await fetch('ai_brain.json?v=' + Date.now());
-            const data = await res.json();
-            document.getElementById('brain-data').innerText = JSON.stringify(data[0].data).substring(0, 300) + "...";
+        function forgeGame() {
+            const p = document.getElementById('prompt').value;
+            const canvas = document.getElementById('game-preview');
+            canvas.style.color = "#00f2ff";
+            canvas.innerHTML = "Processing Prompt: " + p + "...<br>Analyzing Research Data...";
         }
-        loadResearch();
+
+        // Auto-refresh research every 30 seconds
+        setInterval(syncBrain, 30000);
+        syncBrain();
     </script>
 </body>
 </html>
