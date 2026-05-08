@@ -2,99 +2,88 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Genie Game AI | Command Center</title>
+    <title>GENIE AI | COMMAND CENTER</title>
     <style>
-        :root { --neon: #00f2ff; --bg: #020617; --card: #1e293b; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: white; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        :root { --accent: #00f2ff; --bg: #020617; --panel: #0f172a; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; height: 100vh; }
         
-        /* Left Side: Game Forge */
-        .forge-panel { width: 40%; border-right: 1px solid #334155; padding: 30px; display: flex; flex-direction: column; background: #070e1d; }
+        /* Left: Control Panel */
+        .controls { width: 350px; background: var(--panel); border-right: 1px solid #1e293b; padding: 25px; display: flex; flex-direction: column; }
         
-        /* Right Side: Research Stream */
-        .stream-panel { width: 60%; padding: 30px; overflow-y: auto; background: var(--bg); }
+        /* Right: Knowledge Stream */
+        .stream { flex: 1; padding: 40px; overflow-y: auto; background: linear-gradient(180deg, #020617 0%, #070e1d 100%); }
 
-        h1 { color: var(--neon); font-size: 1.5rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
-        .status-bar { font-size: 0.7rem; color: #10b981; margin-bottom: 30px; display: flex; align-items: center; gap: 8px; }
-        .dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; }
-
-        /* Command Input */
-        .command-box { background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-        input { width: 100%; background: none; border: none; color: var(--neon); font-family: monospace; outline: none; font-size: 1rem; }
-        button { background: var(--neon); color: black; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; transition: 0.3s; }
-        button:hover { opacity: 0.8; transform: translateY(-2px); }
-
-        /* Game Canvas Area */
-        #game-preview { width: 100%; height: 250px; background: black; border-radius: 8px; margin-top: auto; border: 1px solid #334155; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 0.8rem; }
+        h1 { font-size: 1.2rem; color: var(--accent); letter-spacing: 3px; margin-bottom: 30px; }
+        .input-group { background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155; }
+        input { width: 100%; background: none; border: none; color: white; outline: none; font-family: monospace; }
+        button { width: 100%; margin-top: 15px; padding: 12px; background: var(--accent); color: black; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { filter: brightness(1.2); transform: scale(1.02); }
 
         /* Research Cards */
-        .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; transition: 0.3s; position: relative; overflow: hidden; }
-        .card:hover { border-color: var(--neon); box-shadow: 0 0 20px rgba(0, 242, 255, 0.1); }
-        .card-url { font-size: 0.7rem; color: #94a3b8; margin-bottom: 8px; font-family: monospace; }
-        .card-text { font-size: 0.9rem; line-height: 1.5; color: #cbd5e1; }
-        .tag { position: absolute; top: 10px; right: 10px; background: #334155; padding: 2px 8px; border-radius: 4px; font-size: 0.6rem; color: var(--neon); }
-
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .card { background: #1e293b66; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 20px; backdrop-filter: blur(10px); transition: 0.3s; }
+        .card:hover { border-color: var(--accent); background: #1e293b; }
+        .card-header { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--accent); margin-bottom: 10px; opacity: 0.7; }
+        .card-title { font-weight: bold; margin-bottom: 8px; display: block; color: #e2e8f0; }
+        .card-body { font-size: 0.9rem; line-height: 1.6; color: #94a3b8; }
+        
+        .status-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; margin-right: 8px; box-shadow: 0 0 8px #10b981; }
     </style>
 </head>
 <body>
 
-    <div class="forge-panel">
-        <h1>Genie Forge</h1>
-        <div class="status-bar"><div class="dot"></div> Agent Online | Ready to Code</div>
+    <div class="controls">
+        <h1>GENIE FORGE</h1>
+        <div style="font-size: 0.8rem; margin-bottom: 20px;"><span class="status-dot"></span>SYSTEMS ACTIVE</div>
         
-        <div class="command-box">
-            <p style="margin-top:0; font-size: 0.8rem; color: #94a3b8;">INPUT PROMPT:</p>
-            <input type="text" id="prompt" placeholder="Build a game with physics...">
-            <button onclick="forgeGame()">FORGE ASSET</button>
+        <div class="input-group">
+            <input type="text" id="game-prompt" placeholder="Describe a game feature...">
         </div>
+        <button onclick="buildAsset()">FORGE CODE</button>
 
-        <div id="game-preview">
-            [PREVIEW CANVAS READY]
+        <div id="forge-status" style="margin-top: 20px; font-size: 0.8rem; color: #64748b; font-family: monospace;">
+            Ready for input...
         </div>
     </div>
 
-    <div class="stream-panel">
-        <h2 style="font-size: 1rem; color: #94a3b8; text-transform: uppercase;">Live Intelligence Stream</h2>
-        <div id="stream-content">Loading brain...</div>
+    <div class="stream">
+        <h2 style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; margin-bottom: 20px;">Live Research Stream</h2>
+        <div id="output">Syncing brain...</div>
     </div>
 
     <script>
-        async function syncBrain() {
+        async function updateDashboard() {
             try {
+                // The cache-buster ensures real-time updates
                 const res = await fetch('ai_brain.json?v=' + Date.now());
                 const data = await res.json();
-                const container = document.getElementById('stream-content');
+                const container = document.getElementById('output');
                 container.innerHTML = '';
 
                 data.forEach(item => {
-                    // This "tidies" the messy text data
-                    let cleanText = item.data.split('Skip to')[0].substring(0, 400).replace(/\\n/g, ' ');
-                    
                     container.innerHTML += `
                         <div class="card">
-                            <div class="tag">RESEARCH</div>
-                            <div class="card-url">${item.url}</div>
-                            <div class="card-text">${cleanText}...</div>
+                            <div class="card-header">
+                                <span>SOURCE: ${new URL(item.url).hostname}</span>
+                                <span>${item.timestamp}</span>
+                            </div>
+                            <b class="card-title">${item.title}</b>
+                            <div class="card-body">${item.data}</div>
                         </div>
                     `;
                 });
             } catch (e) {
-                console.log("Waiting for data...");
+                console.log("Waiting for robot to finish...");
             }
         }
 
-        function forgeGame() {
-            const p = document.getElementById('prompt').value;
-            const canvas = document.getElementById('game-preview');
-            canvas.style.color = "#00f2ff";
-            canvas.innerHTML = "Processing Prompt: " + p + "...<br>Analyzing Research Data...";
+        function buildAsset() {
+            const prompt = document.getElementById('game-prompt').value;
+            document.getElementById('forge-status').innerHTML = "> Analyzing: " + prompt + "<br>> Fetching research metadata...<br>> Generation started.";
         }
 
-        // Auto-refresh research every 30 seconds
-        setInterval(syncBrain, 30000);
-        syncBrain();
+        // Refresh the UI every 15 seconds
+        setInterval(updateDashboard, 15000);
+        updateDashboard();
     </script>
 </body>
 </html>
