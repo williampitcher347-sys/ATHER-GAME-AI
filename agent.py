@@ -6,11 +6,26 @@ import datetime
 import re
 
 # Add the specific topics you want your Genie to master
+
 TARGETS = [
-    "https://developer.mozilla.org/en-US/docs/Games/Tutorials/2D_Breakout_game_pure_JavaScript",
-    "https://web.dev/articles/canvas-basic-usage",
-    "https://pothonprogramming.github.io/"
-]
+    # Core Interactive Learning Environments
+    "code.org",
+    "w3schools.com",
+    "bencentra.com",
+    
+    # Engine Lifecycle Documentation & Sandboxes
+    "mozilla.org",
+    "https://phaser.io",
+    "https://playcanvas.com",
+    
+    # Mathematical & Computational Logic Sites
+    "https://thecodingtrain.com",
+    "https://natureofcode.com",
+    
+    # Micro-Project & Retro Coding Explanations
+    "blogspot.com",
+    "https://tutsplus.com",
+    "williammalone.com" ]
 
 async def scrape(session, url):
     try:
