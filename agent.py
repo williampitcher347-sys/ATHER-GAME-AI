@@ -5,16 +5,14 @@ import json
 import datetime
 import re
 
-# Add the specific topics you want your Genie to master
-
 TARGETS = [
     # Core Interactive Learning Environments
-    "code.org",
-    "w3schools.com",
-    "bencentra.com",
+    "https://code.org",
+    "https://www.w3schools.com",
+    "https://bencentra.com",
     
     # Engine Lifecycle Documentation & Sandboxes
-    "mozilla.org",
+    "https://developer.mozilla.org",
     "https://phaser.io",
     "https://playcanvas.com",
     
@@ -23,39 +21,63 @@ TARGETS = [
     "https://natureofcode.com",
     
     # Micro-Project & Retro Coding Explanations
-    "blogspot.com",
+    "https://blogspot.com",
     "https://tutsplus.com",
-    "williammalone.com" ]
+    "https://williammalone.com" 
+]
+
+# Standard Chrome User-Agent header to avoid basic bot detection
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Accept-Language': 'en-US,en;q=0.9'
+}
 
 async def scrape(session, url):
     try:
-        async with session.get(url, timeout=5) as response:
+        # Increased timeout to 10s for slower responding sites
+        async with session.get(url, headers=HEADERS, timeout=10) as response:
+            if response.status != 200:
+                print(f"⚠️ Failed {url} with status {response.status}")
+                return None
+
             html = await response.text()
             soup = BeautifulSoup(html, 'html.parser')
             
             # Find the most relevant text (paragraphs)
-            content = " ".join([p.text for p in soup.find_all('p')[:3]])
+            paragraphs = soup.find_all('p')
+            content = " ".join([p.get_text() for p in paragraphs[:3]])
+            
             # Clean up junk characters and extra spaces
             content = re.sub(r'\s+', ' ', content).strip()
             
+            title = soup.title.get_text().strip() if soup.title else "Genie Resource"
+            
+            # Skip Cloudflare challenge pages if caught
+            if "Just a moment..." in title:
+                print(f"🛡️ Blocked by Cloudflare: {url}")
+                return None
+
             return {
                 "url": url,
-                "title": soup.title.string if soup.title else "Genie Resource",
+                "title": title,
                 "data": content,
                 "timestamp": datetime.datetime.now().strftime("%I:%M %p")
             }
-    except:
+    except Exception as e:
+        print(f"❌ Error fetching {url}: {e}")
         return None
 
 async def main():
-    async with aiohttp.ClientSession(headers={'User-Agent': 'Genie-Bot/1.0'}) as session:
+    async with aiohttp.ClientSession() as session:
         results = await asyncio.gather(*[scrape(session, u) for u in TARGETS])
-        # Filter out failed sites
+        
+        # Filter out failed sites or blocked responses
         clean_data = [r for r in results if r]
         
-        with open('ai_brain.json', 'w') as f:
+        with open('ai_brain.json', 'w', encoding='utf-8') as f:
             json.dump(clean_data, f, indent=4)
-        print(f"🚀 Genie synchronized {len(clean_data)} research nodes.")
+            
+        print(f"\n🚀 Genie successfully synchronized {len(clean_data)} research nodes to ai_brain.json!")
 
 if __name__ == "__main__":
     asyncio.run(main())
